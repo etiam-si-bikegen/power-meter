@@ -14,7 +14,7 @@ WiFiClient wifiClient;
 // MQTT Broker
 const char *mqtt_broker = MQTT_BROKER;
 const int mqtt_port = MQTT_PORT;
-const char *topic = "test/secure";
+const char *topic = "bike-gen/power-meter";
 const char *mqtt_username = MQTT_USER;
 const char *mqtt_password = MQTT_PASS;
 PubSubClient client(wifiClient);
@@ -62,7 +62,6 @@ void setup() {
 
   // hx711
   scale.begin(SCALE_DOUT_PIN, SCALE_SCK_PIN);
-  scale.tare();
   // scale.tare();
 
   WiFi.begin(ssid, pass);
@@ -77,7 +76,7 @@ void setup() {
 
   // loop until client is connected
   while (!client.connected()) {
-    String client_id = generateRandomClientId();
+    String client_id = "power_meter_" + generateRandomClientId();
 
     if (client.connect(client_id.c_str(), mqtt_username, mqtt_password)) {
       Serial.println("MQTT broker connected");
@@ -97,10 +96,9 @@ void loop() {
   // bere podatke MPU-6050
   recordAccelRegisters();
   recordGyroRegisters();
-  // mpuData = mpuAverageForTime(100);
 
   getWeight();
-  // mqttMsg = String(mpuData.gForceXAverage) + "," + String(mpuData.gForceYAverage) + "," + String(mpuData.gForceZAverage) + "," + String(mpuData.rotXAverage) + "," + String(mpuData.rotYAverage) + "," + String(mpuData.rotZAverage) + "," + String(rawWeight);
+  // mqttMsg is in CSV format
   mqttMsg = String(gForceX) + "," + String(gForceY) + "," + String(gForceZ) + "," + String(rotX) + "," + String(rotY) + "," + String(rotZ) + "," + String(rawWeight);
   // client.publish(topic, mqttMsg.c_str());
   Serial.println(mqttMsg);
@@ -294,7 +292,7 @@ char generateRandomChar() {
 }
 
 String generateRandomClientId() {
-  String clientId = "ESP32Client-";
+  String clientId = "";
   for (int i = 0; i < 8; ++i) {
     clientId += generateRandomChar();
   }
